@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منصة محمد إيهاب</title>
+<style>
+:root{--navy:#111d38;--blue:#294a7b;--gold:#d7b36a;--bg:#f4f6fa;--text:#19243a}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.8}
+header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-bottom:4px solid var(--gold);padding:22px 5%}
+nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.brand{font-size:1.4rem;font-weight:bold}.brand span{color:var(--gold)}nav a{color:#fff;text-decoration:none;margin-inline-start:14px}
+.hero{max-width:1000px;margin:28px auto 12px}.hero h1{font-size:clamp(2rem,5vw,3rem);margin:0}.hero p{color:#e2e9f5;margin:8px 0}
+main{max-width:1050px;margin:30px auto;padding:0 16px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+input,select,button{font:inherit;padding:11px 13px;border-radius:10px;border:1px solid #ccd5e2}input,select{background:#fff;min-width:190px}button{background:var(--blue);color:white;border:0;cursor:pointer;font-weight:bold}.secondary{background:#e8edf6;color:var(--navy);border:1px solid #d6deeb}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:16px}.card,.panel{background:#fff;border:1px solid #e2e7ef;border-radius:16px;padding:20px;box-shadow:0 5px 20px #14213b0a}.tag{display:inline-block;background:#f8f0df;color:#78551b;border-radius:20px;padding:2px 10px;font-size:.88rem}.muted{color:#68758a}.card button{width:100%;margin-top:12px}.hidden{display:none!important}.question{padding:15px 0;border-bottom:1px solid #e6eaf0}.option{display:block;background:#f7f9fc;border:1px solid #e1e6ef;border-radius:10px;padding:9px 12px;margin:8px 0;cursor:pointer}.option input{min-width:auto}.correct{background:#e5f7ec;border-color:#45a76b}.wrong{background:#fff0ef;border-color:#db7770}.feedback{font-weight:bold;margin-top:7px}.result{font-size:1.25rem;color:var(--blue);font-weight:bold}footer{text-align:center;padding:28px;color:#758198}
+</style>
+</head>
+<body>
+<header>
+<nav><div class="brand">منصة <span>محمد إيهاب</span></div><div><a href="#" onclick="showHome()">الرئيسية</a><a href="#tests">الاختبارات</a><a href="#about">عن المنصة</a></div></nav>
+<section class="hero"><h1>اختبر فهمك، وطوّر علمك</h1><p>اختبارات تعليمية ومراجعات منظمة في مكان واحد.</p></section>
+</header>
+<main>
+<section id="home">
+<h2 id="tests">مكتبة الاختبارات</h2><p class="muted">اختر اختبارًا وابدأ الحل. ستظهر الإجابة الصحيحة بعد اختيارك.</p>
+<div class="toolbar"><input id="search" placeholder="ابحث عن اختبار..." oninput="renderTests()"><select id="category" onchange="renderTests()"><option value="">كل الأقسام</option><option>الفقه</option><option>الطهارة</option><option>القرآن والتجويد</option><option>عام</option></select></div>
+<div id="testsGrid" class="grid"></div>
+</section>
+<section id="quiz" class="panel hidden"><button class="secondary" onclick="showHome()">العودة للاختبارات</button><h2 id="quizTitle"></h2><p id="quizDesc" class="muted"></p><div id="questions"></div><button onclick="finishQuiz()">إنهاء الاختبار وعرض النتيجة</button><p id="score" class="result"></p></section>
+<section id="about" class="panel" style="margin-top:26px"><h2>عن المنصة</h2><p>منصة محمد إيهاب مساحة للاختبارات التعليمية والمراجعة. ستتم إضافة اختبارات جديدة تباعًا.</p></section>
+</main>
+<footer>© <span id="year"></span> منصة محمد إيهاب</footer>
+<script>
+const starterTests=[{id:1,title:"اختبار تجريبي في الطهارة",category:"الطهارة",desc:"أسئلة تأسيسية للمراجعة في باب الطهارة.",questions:[
+{q:"ما المقصود بالطهارة في الاصطلاح الفقهي إجمالًا؟",o:["رفع الحدث وإزالة النجاسة","الصلاة في المسجد","قراءة القرآن فقط"],a:0,why:"الطهارة تشمل رفع الحدث وإزالة النجاسة."},
+{q:"بماذا يكون الوضوء؟",o:["بالماء الطهور","بأي سائل","بالتراب دائمًا"],a:0,why:"الأصل في الوضوء استعمال الماء الطهور."},
+{q:"متى يشرع التيمم؟",o:["عند فقد الماء أو تعذر استعماله بشروطه","في كل صلاة مع وجود الماء","للتنزه"],a:0,why:"يشرع التيمم عند فقد الماء أو العجز عن استعماله وفق أحكامه."}
+]}];
+let tests=JSON.parse(localStorage.getItem("mohamedEhabTests")||"null")||starterTests;
+let answers={},currentTest=null;
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderTests(){const term=$("search").value.trim(),cat=$("category").value;const list=tests.filter(t=>(!cat||t.category===cat)&&(!term||(t.title+" "+(t.desc||"")).includes(term)));$("testsGrid").innerHTML=list.length?list.map(t=>`<article class="card"><span class="tag">${esc(t.category)}</span><h3>${esc(t.title)}</h3><p class="muted">${esc(t.desc||"")}</p><p class="muted">${t.questions.length} أسئلة</p><button onclick="startQuiz(${t.id})">ابدأ الاختبار</button></article>`).join(""):'<div class="panel">لا توجد اختبارات مطابقة حاليًا.</div>';}
+function startQuiz(id){currentTest=tests.find(t=>t.id===id);answers={};$("home").classList.add("hidden");$("quiz").classList.remove("hidden");$("quizTitle").textContent=currentTest.title;$("quizDesc").textContent=currentTest.desc||"";$("score").textContent="";$("questions").innerHTML=currentTest.questions.map((q,i)=>`<div class="question"><h3>${i+1}. ${esc(q.q)}</h3>${q.o.map((v,j)=>`<label class="option" id="opt-${i}-${j}"><input type="radio" name="q${i}" onchange="chooseAnswer(${i},${j})"> ${esc(v)}</label>`).join("")}<div class="feedback" id="feedback-${i}"></div></div>`).join("");window.scrollTo(0,0);}
+function chooseAnswer(i,j){answers[i]=j;const q=currentTest.questions[i];q.o.forEach((_,k)=>$("opt-"+i+"-"+k).classList.remove("correct","wrong"));$("opt-"+i+"-"+q.a).classList.add("correct");if(j!==q.a)$("opt-"+i+"-"+j).classList.add("wrong");$("feedback-"+i).textContent=(j===q.a?"إجابة صحيحة. ":"إجابة غير صحيحة. الإجابة الصحيحة: "+q.o[q.a]+". ")+(q.why||"");}
+function finishQuiz(){const total=currentTest.questions.length,correct=currentTest.questions.filter((q,i)=>answers[i]===q.a).length;$("score").textContent=`نتيجتك: ${correct} من ${total} (${Math.round(correct/total*100)}٪)`;}
+function showHome(){$("quiz").classList.add("hidden");$("home").classList.remove("hidden");window.scrollTo(0,0);}
+$("year").textContent=new Date().getFullYear();renderTests();
+</script>
+</body></html>
